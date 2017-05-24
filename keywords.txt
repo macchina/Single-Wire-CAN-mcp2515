@@ -10,6 +10,7 @@ SWcan	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+setupSW	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

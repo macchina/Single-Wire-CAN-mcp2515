@@ -25,45 +25,21 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
- */
+*/
 
-#include <mcp_swcan.h>
+#ifndef MCP2515_SW_CAN_h
+#define MCP2515_SW_CAN_h
 
-void SWcan::setupSW(unsigned long addr)
+#include "Arduino.h"
+#include "MCP2515.h"
+#include "MCP2515_defs.h"
+
+class SWcan : public MCP2515
 {
+  public:
+    SWcan(uint8_t _CS, uint8_t _INTPIN) : MCP2515(_CS, _INTPIN){	};
+    void setupSW(unsigned long speed);
+    void mode(byte mode);
+};
 
-    begin(CAN_33KBPS);
-
-    PIOB->PIO_PER = PIO_PB0;
-    PIOB->PIO_OER = PIO_PB0;
-    PIOB->PIO_PUDR = PIO_PB0;
-
-    PIOB->PIO_PER = PIO_PB27;
-    PIOB->PIO_OER = PIO_PB27;
-    PIOB->PIO_PUDR = PIO_PB27;
-}
-
-void SWcan::mode(byte mode)
-{
-    switch (mode)
-    {
-    case 0:                        // Sleep Mode
-        PIOB->PIO_CODR = PIO_PB27; // LOW
-        PIOB->PIO_CODR = PIO_PB0;  // LOW
-        break;
-    case 1:                        // High Speed
-        PIOB->PIO_SODR = PIO_PB27; // HIGH
-        PIOB->PIO_CODR = PIO_PB0;  // LOW
-        break;
-    case 2:                        // High Voltage Wake-Up
-        PIOB->PIO_CODR = PIO_PB27; // LOW
-        PIOB->PIO_SODR = PIO_PB0;  // HIGH
-        break;
-    case 3:                        // Normal Mode
-        PIOB->PIO_SODR = PIO_PB27; // HIGH
-        PIOB->PIO_SODR = PIO_PB0;  // HIGH
-        break;
-    default:
-        break;
-    }
-}
+#endif
