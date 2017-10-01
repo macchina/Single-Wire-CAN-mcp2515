@@ -29,7 +29,7 @@
 
 #include "Arduino.h"
 #include "SPI.h"
-#include <sw_can.h>
+#include <MCP2515_sw_can.h>
 #include "MCP2515_defs.h"
 
 void SWcan::setupSW(unsigned long speed)

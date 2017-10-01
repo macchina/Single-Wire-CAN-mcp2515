@@ -27,7 +27,7 @@
 */
 
 #include <SPI.h>
-#include <sw_can.h>
+#include <MCP2515_sw_can.h>
 
 // Pin definitions specific to how the MCP2515 is wired up.
 #define CS_PIN    85
