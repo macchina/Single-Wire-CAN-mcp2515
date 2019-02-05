@@ -32,18 +32,14 @@
 #include <MCP2515_sw_can.h>
 #include "MCP2515_defs.h"
 
+//Initalize the two mode pins and also set them to mode 3 which is normal mode
 void SWcan::setupSW(unsigned long speed)
 {
-
     Init(speed, 16);
-
-    PIOB->PIO_PER = PIO_PB0;
-    PIOB->PIO_OER = PIO_PB0;
-    PIOB->PIO_PUDR = PIO_PB0;
-
-    PIOB->PIO_PER = PIO_PB27;
-    PIOB->PIO_OER = PIO_PB27;
-    PIOB->PIO_PUDR = PIO_PB27;
+    pinMode(SWC_M0, OUTPUT);
+    pinMode(SWC_M1, OUTPUT);
+    digitalWrite(SWC_M0, HIGH);
+    digitalWrite(SWC_M1, HIGH);
 }
 
 void SWcan::mode(byte mode)
@@ -51,20 +47,20 @@ void SWcan::mode(byte mode)
     switch (mode)
     {
     case 0:                        // Sleep Mode
-        PIOB->PIO_CODR = PIO_PB27; // LOW
-        PIOB->PIO_CODR = PIO_PB0;  // LOW
+        digitalWrite(SWC_M0, LOW);
+        digitalWrite(SWC_M1, LOW);
         break;
     case 1:                        // High Speed
-        PIOB->PIO_SODR = PIO_PB27; // HIGH
-        PIOB->PIO_CODR = PIO_PB0;  // LOW
+        digitalWrite(SWC_M0, HIGH);
+        digitalWrite(SWC_M1, LOW);
         break;
     case 2:                        // High Voltage Wake-Up
-        PIOB->PIO_CODR = PIO_PB27; // LOW
-        PIOB->PIO_SODR = PIO_PB0;  // HIGH
+        digitalWrite(SWC_M0, LOW);
+        digitalWrite(SWC_M1, HIGH);
         break;
     case 3:                        // Normal Mode
-        PIOB->PIO_SODR = PIO_PB27; // HIGH
-        PIOB->PIO_SODR = PIO_PB0;  // HIGH
+        digitalWrite(SWC_M0, HIGH);
+        digitalWrite(SWC_M1, HIGH);
         break;
     default:
         break;

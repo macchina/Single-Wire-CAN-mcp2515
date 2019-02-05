@@ -30,20 +30,26 @@
 #include <MCP2515_sw_can.h>
 
 // Pin definitions specific to how the MCP2515 is wired up.
-#define CS_PIN    85
-#define INT_PIN    84
+#ifdef MACCHINA_M2
+#define CS_PIN  SPI0_CS3
+#define INT_PIN SWC_INT
+#else
+#define CS_PIN  34
+#define INT_PIN 38
+#endif
 
 // Create CAN object with pins as defined
-SWcan CAN(CS_PIN, INT_PIN);
+SWcan SCAN(CS_PIN, INT_PIN);
 
 void CANHandler() {
-	CAN.intHandler();
+	SCAN.intHandler();
 }
 
 void setup() {
-	Serial.begin(115200);
+  delay(5000);
+	SerialUSB.begin(115200);
 	
-	Serial.println("Initializing ...");
+	SerialUSB.println("Initializing ...");
 
 	// Set up SPI Communication
 	// dataMode can be SPI_MODE0 or SPI_MODE3 only for MCP2515
@@ -55,51 +61,44 @@ void setup() {
 	// Initialize MCP2515 CAN controller at the specified speed and clock frequency
 	// (Note:  This is the oscillator attached to the MCP2515, not the Arduino oscillator)
 	//speed in KHz, clock in MHz
-	CAN.setupSW(250);
+	SCAN.setupSW(33);
 	
-	attachInterrupt(6, CANHandler, FALLING);
-	CAN.InitFilters(false);
-	CAN.SetRXMask(MASK0, 0x7F0, 0); //match all but bottom four bits
-	CAN.SetRXFilter(FILTER0, 0x100, 0); //allows 0x100 - 0x10F
-	//So, this code will only accept frames with ID of 0x100 - 0x10F. All other frames
-	//will be ignored.
+	attachInterrupt(INT_PIN, CANHandler, FALLING);
+	SCAN.InitFilters(true);
+    SCAN.mode(3); //3 = Normal, 2 = HV Wake up, 1 = High Speed, 0 = Sleep
 
-	Serial.println("Ready ...");
+	SerialUSB.println("Ready ...");
 }
 
 byte i=0;
 
-// CAN message frame (actually just the parts that are exposed by the MCP2515 RX/TX buffers)
-Frame message;
+// CAN message frame
+CAN_FRAME message;
 
 void loop() {
-	
-	if (CAN.GetRXFrame(message)) {
-		// Print message
-		Serial.print("ID: ");
-		Serial.println(message.id,HEX);
-		Serial.print("Extended: ");
-		if(message.extended) {
-			Serial.println("Yes");
-		} else {
-			Serial.println("No");
-		}
-		Serial.print("Length: ");
-		Serial.println(message.length,DEC);
-		for(i=0;i<message.length;i++) {
-			Serial.print(message.data.byte[i],HEX);
-			Serial.print(" ");
-		}
-		Serial.println();
-		Serial.println();
-
-		// Send out a return message for each one received
-		// Simply increment message id and data bytes to show proper transmission
-		// Note: this will double the traffic on the network (provided it passes the filter above)
-		message.id++;
-		for(i=0;i<message.length;i++) {
-			message.data.byte[i]++;
-		}
-		CAN.EnqueueTX(message);
-	}
+	message.id = 0x340;
+	message.rtr = 0;
+	message.extended = 0;
+	message.length = 4;
+	message.data.byte[0] = 0x23;
+	message.data.byte[1] = 0xFE;
+	message.data.byte[2] = 0x1D;
+	message.data.byte[3] = 0x7A;
+	SCAN.EnqueueTX(message);
+	delay(2000);
+	message.id = 0x100FFEE;
+	message.rtr = 0;
+	message.extended = 1;
+	message.length = 6;
+	message.data.byte[0] = 0x23;
+	message.data.byte[1] = 0xFE;
+	message.data.byte[2] = 0x1D;
+	message.data.byte[3] = 0x7A;
+	message.data.byte[4] = 0x1D;
+	message.data.byte[5] = 0x7A;
+	SCAN.mode(2); //use HV Wakeup sending
+	SCAN.EnqueueTX(message); //send it
+	delay(5); //wait a bit to make sure it was sent before ending HV Wake up
+	SCAN.mode(3); //go back to normal mode
+	delay(2000);
 }
